@@ -1,0 +1,21 @@
+# NetGuardAI - Requirements
+# Install with: pip install -r requirements.txt
+
+# Core
+click>=8.0.0
+
+# Optional: For enhanced network scanning
+# nmap>=0.1.0  # Install via system: sudo apt install nmap
+
+# Optional: For Web UI
+# flask>=2.0.0
+# flask-socketio>=5.0.0
+
+# Optional: For notifications
+# requests>=2.28.0
+
+# Optional: For database
+# aiosqlite>=0.19.0
+
+# System requirements (install via apt/sudo):
+# sudo apt install iptables snort tcpdump nmap net-tools ss
