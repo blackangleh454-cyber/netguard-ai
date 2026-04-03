@@ -1,0 +1,40 @@
+{
+    "firewall": {
+        "interface": "eth0",
+        "default_policy": "DROP",
+        "allowed_ports": [
+            22,
+            80,
+            443
+        ],
+        "rate_limit": 100,
+        "block_duration": 3600
+    },
+    "snort": {
+        "enabled": true,
+        "interface": "eth0",
+        "alert_level": "fast",
+        "custom_rules_dir": "rules"
+    },
+    "autonomous": {
+        "enabled": true,
+        "check_interval": 60,
+        "auto_block": true,
+        "severity_thresholds": {
+            "CRITICAL": 0,
+            "HIGH": 50,
+            "MEDIUM": 100,
+            "LOW": 200
+        }
+    },
+    "logging": {
+        "level": "INFO",
+        "retention_days": 30,
+        "log_dir": "logs"
+    },
+    "notifications": {
+        "enabled": false,
+        "email": "",
+        "webhook_url": ""
+    }
+}

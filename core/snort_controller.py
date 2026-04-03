@@ -7,6 +7,7 @@ import threading
 import logging
 import os
 import re
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Optional
@@ -63,16 +64,13 @@ preprocessor frag3_engine: policy first detect_anomalies
 
 preprocessor stream5_global: max_tcp 8192, track_tcp yes, track_udp yes
 preprocessor stream5_tcp: policy first, ports client 21 22 23 25 42 53 80 110 111 135 136 137 138 139 143 161 445 513 514 587 646 691 1433 1521 3306 3389 5556 6660 6661 6662 6663 6664 6665 6666 6667 6668 6669 7000 7001 8000 8080 8180 8443
-preprocessor stream5_udp: ports {21 53 67 68 69 111 123 135 136 137 138 161 500 513 514 515 518 520 634 640 641 666 700 1025 1026 1027 1028 1029 1030 1434 1701 1812 1813 2049 5060 5061 5353 5632 17000}
 
-preprocessor http_inspect: global \\
-    compress_depth 65535 decompress_depth 65535
+preprocessor http_inspect: global
 
 preprocessor http_inspect_server: server default \\
     http_methods GET POST PUT DELETE HEAD OPTIONS \\
-    ports {{ 80 81 82 83 84 85 86 87 88 89 90 311 383 555 591 593 631 801 808 818 901 972 1158 1220 1414 1533 1741 1742 1812 1813 1830 1900 2001 2002 2049 2065 2068 2099 2222 2233 2301 2375 2376 2483 2484 2575 2809 3000 3001 3002 3031 3050 3100 3102 3104 3105 3128 3333 3400 3690 3780 4000 4200 4242 4443 4444 4445 4658 4840 4843 4848 5000 5001 5009 5051 5060 5061 5080 5101 5104 5108 5190 5280 5357 5432 5433 5500 5631 5632 5800 5801 5802 5803 5900 5901 5902 5903 6000 6001 6002 6003 6004 6005 6006 6007 6008 6009 6010 6022 6060 6100 6379 6600 6646 6660 6661 6662 6663 6664 6665 6666 6667 6668 6669 6697 7000 7001 7002 7003 7004 7005 7006 7007 7008 7009 7010 7100 7200 7201 7400 7443 7444 7474 7547 7548 7549 7627 7777 7778 7779 7800 7801 7802 8000 8001 8002 8003 8008 8009 8010 8011 8020 8021 8022 8028 8030 8042 8043 8044 8045 8080 8081 8082 8083 8084 8085 8086 8087 8088 8089 8090 8091 8092 8118 8123 8138 8139 8140 8180 8181 8182 8200 8222 8243 8280 8281 8333 8334 8400 8443 8444 8445 8500 8530 8531 8761 8765 8787 8800 8801 8802 8804 8888 8889 9000 9001 9002 9003 9009 9010 9042 9060 9080 9090 9091 9092 9093 9094 9095 9096 9097 9098 9099 9100 9101 9102 9103 9104 9105 9110 9111 9200 9201 9202 9290 9300 9301 9302 9303 9306 9309 9312 9390 9391 9392 9393 9394 9395 9396 9397 9398 9399 9443 9500 9530 9600 9876 9877 9878 9898 9900 9943 9944 9980 9981 10000 10001 10002 10003 10004 10005 10006 10007 10008 10009 10010 10080 10081 10082 10083 10084 10085 10086 10087 10088 10089 10090 10091 10092 10093 10094 10095 10096 10097 10098 10099 10100 10250 10255 10256 10880 10990 11001 11080 11110 11211 11235 11311 12000 12345 12443 12444 13000 13443 14000 14443 15000 16000 16001 16080 17000 17001 18000 18080 18081 18091 18092 18093 18094 18095 18096 18097 18098 18099 18100 19000 19080 20000 22000 22222 23023 24000 25000 25105 25565 26000 27000 27017 27018 27019 27020 28000 28080 29000 30000 30080 31000 31337 32400 33060 33400 33848 34000 34443 35000 36000 37000 37892 38000 39000 40000 40001 40002 40003 40004 40005 40006 40007 40008 40009 40010 42000 43000 44000 45000 45001 45002 45003 45004 45005 45006 45007 45008 45009 45010 45011 45012 45013 45014 45015 45016 45017 45018 45019 45020 45454 47000 47808 48000 48080 48400 49000 50000 50000 50030 50060 50070 50090 51000 52000 53000 54000 55000 55555 56000 56001 57000 58000 59000 60000 60080 61000 62000 63000 64000 65000 65500 }} \\
-    server_flow_depth 0 client_flow_depth 0 \\
-    normalize_cookies normalize_url normalize_double_encode normalize_utf_16_to_utf8 normalize_http_headers normalize_javascript compress_pace 8192
+    ports {{ 80 443 }} \\
+    server_flow_depth 0 client_flow_depth 0
 
 output alert_fast: {self.alert_file}
 
@@ -107,24 +105,24 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"SQL Injection Attempt
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"SQL Injection Attempt - OR 1=1"; content:"OR 1=1"; nocase; sid:1000021; rev:1;)
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"SQL Injection Attempt - DROP TABLE"; content:"DROP TABLE"; nocase; sid:1000022; rev:1;)
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"SQL Injection Attempt - EXECUTE"; content:"EXECUTE"; nocase; sid:1000023; rev:1;)
-alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"SQL Injection Attempt - ';--"; content:";--"; sid:1000024; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"SQL Injection Attempt"; content:"' or 1=1"; sid:1000024; rev:1;)
 
 # XSS Attacks
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"XSS Attack - Script Tag"; content:"<script"; nocase; sid:1000030; rev:1;)
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"XSS Attack - Javascript URI"; content:"javascript:"; nocase; sid:1000031; rev:1;)
-alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"XSS Attack - OnError"; content:"onerror="; nocase; sid:1000032; rev:1;)
-alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"XSS Attack - OnLoad"; content:"onload="; nocase; sid:1000033; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"XSS Attack - OnError"; content:"onerror="; sid:1000032; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"XSS Attack - OnLoad"; content:"onload="; sid:1000033; rev:1;)
 
 # Command Injection
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Command Injection - Pipe"; content:"|"; sid:1000040; rev:1;)
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Command Injection - Semicolon"; content:";"; sid:1000041; rev:1;)
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Command Injection - Backtick"; content:"`"; sid:1000042; rev:1;)
-alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Command Injection - $()"; content:"$("; sid:1000043; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Command Injection"; content:"$("; sid:1000043; rev:1;)
 
 # Path Traversal
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Path Traversal - ../"; content:"../"; sid:1000050; rev:1;)
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Path Traversal - /etc/passwd"; content:"/etc/passwd"; sid:1000051; rev:1;)
-alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Path Traversal - Windows"; content:"..\\\\"; sid:1000052; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Path Traversal"; content:"..\\\\"; sid:1000052; rev:1;)
 
 # Malware Patterns
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Malware - Suspicious Download"; content:"Content-Disposition|3A| attachment"; sid:1000060; rev:1;)
@@ -157,9 +155,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"Possible Credential Leak"; co
 # Cryptomining
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Cryptomining Pool Connection"; content:"stratum+tcp"; sid:1000120; rev:1;)
 
-# == SCANNING ==
-
-# Nmap Detection
+# Scanning Detection
 alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"Nmap Scan - Version Probe"; content:"OSScan"; sid:1000130; rev:1;)
 alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"Nmap Scan - OS Probe"; content:"nmap"; sid:1000131; rev:1;)
 """
@@ -168,7 +164,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"Nmap Scan - OS Probe"; conten
         with open(rules_file, "w") as f:
             f.write(rules_content)
         
-        logger.info(f"Created {len(rules_content.splitlines())} custom rules")
+        logger.info(f"Created custom rules in {rules_file}")
     
     def initialize(self):
         """Initialize Snort IDS"""
@@ -184,8 +180,6 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"Nmap Scan - OS Probe"; conten
                 "-c", str(self.snort_conf),
                 "-i", self.interface,
                 "-A", "fast",
-                "-Q", "--daq", "nfq",
-                "-k", "notla",
                 "-l", str(self.log_dir),
                 "-D"
             ]
@@ -226,9 +220,9 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"Nmap Scan - OS Probe"; conten
                             for alert in alerts:
                                 self._process_alert(alert)
             except Exception as e:
-                logger.error(f"Alert monitoring error: {e}")
+                logger.debug(f"Alert monitoring error: {e}")
             
-            threading.Event().wait(2)
+            time.sleep(2)
     
     def _parse_alerts(self, content: str) -> List[Dict]:
         """Parse Snort alert content"""
@@ -251,16 +245,13 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"Nmap Scan - OS Probe"; conten
                 return None
             
             classification = parts[1].strip("() ")
-            
             timestamp = datetime.now().isoformat()
             
-            severity = "HIGH"
-            if "Priority: 2" in line or "Priority:3" in line:
-                severity = "LOW"
-            elif "Priority: 1" in line:
+            severity = "MEDIUM"
+            if "Priority: 1" in line:
                 severity = "HIGH"
-            else:
-                severity = "MEDIUM"
+            elif "Priority: 2" in line:
+                severity = "LOW"
             
             source_ip = "unknown"
             dest_ip = "unknown"
@@ -280,7 +271,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"Nmap Scan - OS Probe"; conten
             }
             
         except Exception as e:
-            logger.error(f"Failed to parse alert: {e}")
+            logger.debug(f"Failed to parse alert: {e}")
             return None
     
     def _process_alert(self, alert: Dict):
@@ -309,8 +300,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"Nmap Scan - OS Probe"; conten
             **self.stats,
             "running": self.running,
             "interface": self.interface,
-            "config": str(self.snort_conf),
-            "rules_count": len(self._create_rules.__doc__ or "").splitlines()
+            "config": str(self.snort_conf)
         }
     
     def add_rule(self, rule: str):
@@ -371,7 +361,6 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"Nmap Scan - OS Probe"; conten
                 return True
             else:
                 logger.error("Snort rules validation failed")
-                logger.error(result.stderr)
                 return False
                 
         except subprocess.TimeoutExpired:

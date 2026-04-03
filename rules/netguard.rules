@@ -1,0 +1,76 @@
+
+# NetGuardAI Custom IDS Rules
+# Author: Mirza Muhammad Usman
+
+# === MALICIOUS ACTIVITY ===
+
+# Suspicious port scanning
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"PORT SCAN Attempt"; flags:S; sid:1000001; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"Null Scan Detected"; flags:0; sid:1000002; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"FIN Scan Detected"; flags:F; sid:1000003; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"Xmas Scan Detected"; flags:FPU; sid:1000004; rev:1;)
+
+# Brute Force Detection
+alert tcp $EXTERNAL_NET any -> $HOME_NET 22 (msg:"SSH Brute Force Attempt"; flags:S; threshold:type threshold, track by_src, count 5, seconds 60; sid:1000010; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET 23 (msg:"Telnet Brute Force Attempt"; flags:S; threshold:type threshold, track by_src, count 3, seconds 60; sid:1000011; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET 3306 (msg:"MySQL Brute Force Attempt"; flags:S; threshold:type threshold, track by_src, count 5, seconds 60; sid:1000012; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET 5432 (msg:"PostgreSQL Brute Force Attempt"; flags:S; threshold:type threshold, track by_src, count 5, seconds 60; sid:1000013; rev:1;)
+
+# SQL Injection Attempts
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"SQL Injection Attempt - UNION SELECT"; content:"UNION SELECT"; nocase; sid:1000020; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"SQL Injection Attempt - OR 1=1"; content:"OR 1=1"; nocase; sid:1000021; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"SQL Injection Attempt - DROP TABLE"; content:"DROP TABLE"; nocase; sid:1000022; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"SQL Injection Attempt - EXECUTE"; content:"EXECUTE"; nocase; sid:1000023; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"SQL Injection Attempt"; content:"' or 1=1"; sid:1000024; rev:1;)
+
+# XSS Attacks
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"XSS Attack - Script Tag"; content:"<script"; nocase; sid:1000030; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"XSS Attack - Javascript URI"; content:"javascript:"; nocase; sid:1000031; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"XSS Attack - OnError"; content:"onerror="; sid:1000032; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"XSS Attack - OnLoad"; content:"onload="; sid:1000033; rev:1;)
+
+# Command Injection
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Command Injection - Pipe"; content:"|"; sid:1000040; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Command Injection - Semicolon"; content:";"; sid:1000041; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Command Injection - Backtick"; content:"`"; sid:1000042; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Command Injection"; content:"$("; sid:1000043; rev:1;)
+
+# Path Traversal
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Path Traversal - ../"; content:"../"; sid:1000050; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Path Traversal - /etc/passwd"; content:"/etc/passwd"; sid:1000051; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Path Traversal"; content:"..\\"; sid:1000052; rev:1;)
+
+# Malware Patterns
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Malware - Suspicious Download"; content:"Content-Disposition|3A| attachment"; sid:1000060; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Malware - Executable Download"; content:"Content-Type|3A| application/octet-stream"; sid:1000061; rev:1;)
+
+# DDoS Patterns
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"DDoS - SYN Flood"; flags:S; threshold:type threshold, track by_src, count 100, seconds 10; sid:1000070; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"DDoS - HTTP Flood"; flags:PA; threshold:type threshold, track by_src, count 50, seconds 10; sid:1000071; rev:1;)
+
+# Suspicious Protocols
+alert tcp $EXTERNAL_NET 6660:6670 -> $HOME_NET any (msg:"Suspicious - IRC Traffic"; sid:1000080; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET 4444 (msg:"Suspicious - Metasploit Payload"; sid:1000081; rev:1;)
+
+# DNS Tunneling
+alert udp $EXTERNAL_NET 53 -> $HOME_NET any (msg:"DNS Query - Long Subdomain (Possible Tunnel)"; dsize:>100; sid:1000090; rev:1;)
+
+# ICMP Tunneling
+alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"ICMP - Large Payload (Possible Tunnel)"; dsize:>100; sid:1000091; rev:1;)
+
+# === POLICY VIOLATIONS ===
+
+# Unauthorized Access
+alert tcp $EXTERNAL_NET any -> $HOME_NET 3389 (msg:"RDP Connection Attempt"; sid:1000100; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET 445 (msg:"SMB Connection Attempt"; sid:1000101; rev:1;)
+
+# Sensitive Data Exfiltration
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"Possible Data Exfiltration"; content:"password="; sid:1000110; rev:1;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"Possible Credential Leak"; content:"Authorization|3A| Basic"; sid:1000111; rev:1;)
+
+# Cryptomining
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"Cryptomining Pool Connection"; content:"stratum+tcp"; sid:1000120; rev:1;)
+
+# Scanning Detection
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"Nmap Scan - Version Probe"; content:"OSScan"; sid:1000130; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"Nmap Scan - OS Probe"; content:"nmap"; sid:1000131; rev:1;)
